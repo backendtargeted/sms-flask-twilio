@@ -1,0 +1,54 @@
+Ngrok Auth token 2YDEtECGkofUOsSrVOb8IUWSljw_oe5iPAeNZMpA3YSXyyXA
+
+
+account_sid = 'ACad25764d323e82dbc76f774cd1747d51'
+auth_token = '57af55422e3e202cc120874b8f3be966'
+twilio_number = '+18335335918'
+ngrok = 2YDEtECGkofUOsSrVOb8IUWSljw_oe5iPAeNZMpA3YSXyyXA
+
+
+google api = AIzaSyD_v-TfXgHcUGs6NQ5YiWs3BkkXQHzkV34
+
+messaging_service_SID = 'MGb13799ba60f62a0bd9a9b9c3b92f3ae0'
+smsPassword
+
+00_List Phones // twilio phone-numbers:list
+01_get webhook // ngrok http 5000
+02_update phone webhook // twilio phone-numbers:update {+18335335918} -l debug --sms-url https://691e-2001-8a0-d945-fc00-c450-df27-8f8a-cb7d.ngrok-free.app/sms
+ 
+
+
+import subprocess
+import re
+
+# Step 1: List Twilio phone numbers
+list_command = ["twilio", "phone-numbers:list"]
+phone_numbers = subprocess.run(list_command, capture_output=True, text=True)
+phone_numbers = phone_numbers.stdout.strip().split('\n')
+
+# Step 2: Run ngrok and extract ngrok URL
+ngrok_command = ["ngrok", "http", "5000", "--verify-webhook=twilio", "--verify-webhook-secret=2YDEtECGkofUOsSrVOb8IUWSljw_oe5iPAeNZMpA3YSXyyXA"]
+ngrok_process = subprocess.Popen(ngrok_command, stdout=subprocess.PIPE)
+ngrok_output = ngrok_process.stdout.readline().decode().strip()
+ngrok_url_match = re.search(r'https://\S+', ngrok_output)
+if ngrok_url_match:
+    ngrok_url = ngrok_url_match.group(0)
+else:
+    print("Error: Ngrok URL not found.")
+    exit(1)
+
+# Step 3: Update Twilio phone numbers
+for number in phone_numbers:
+    number = number.strip()
+    update_command = ["twilio", "phone-numbers:update", number, "-l", "debug", "--sms-url", f"https://{ngrok_url}/sms"]
+    subprocess.run(update_command)
+
+# Step 4: Stop ngrok after some time (optional)
+# You can add a delay and then kill the ngrok process
+# For example:
+# import time
+# time.sleep(60)  # Wait for 60 seconds
+# ngrok_process.terminate()  # Terminate ngrok
+
+
+
